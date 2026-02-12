@@ -1,7 +1,7 @@
 import os
 import sys
-import mammoth
-from markdownify import markdownify as md
+import mammoth   #type ignore
+from markdownify import markdownify as md  #type ignore
 
 def convert_docx_to_md(docx_path, output_path=None):
     """
