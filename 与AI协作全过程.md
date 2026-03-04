@@ -2954,3 +2954,61 @@ python run_edge_rpa.py
 
 ---
 
+### 🧑‍💻 测试工程师 (User)
+
+[Image]
+[Image]
+<image_files>
+The following images were provdied by the user and saved to the workspace for future use:
+1. C:\Users\blwang16\.cursor\projects\d-jfznt-jingfenzhinengti/assets/c__Users_blwang16_AppData_Roaming_Cursor_User_workspaceStorage_3d548c5799ecee590f018d8cd81b26ce_images_image-fb905251-e198-4a05-b8f3-d16ac0b7cb08.png
+2. C:\Users\blwang16\.cursor\projects\d-jfznt-jingfenzhinengti/assets/c__Users_blwang16_AppData_Roaming_Cursor_User_workspaceStorage_3d548c5799ecee590f018d8cd81b26ce_images_image-e59b0bf9-5805-46c7-8b2b-a1287c0b18ec.png
+
+These images can be copied for use in other locations.
+</image_files>
+我很好奇你是怎么识别出来上面图片里面的那个数字员工，然后把问题准确输入到第二个图片里面的那个对话框里面的
+
+---
+
+### 🤖 AI 智能体 (Assistant)
+
+这个问题的核心就在于 **Playwright 这个自动化工具的“定位器（Locators）”魔法**。
+
+你其实注意到了一个非常关键的细节：打开网页后，其实是一个总览面板（图 1），我需要先点击右下角的“数字员工”悬浮球，才能弹出图 2 里面的对话框，然后再把字输进去。
+
+但这并不是靠图像识别（AI 没去“看”你的图片），而是靠**解析网页底层的 HTML 代码结构**来实现的。
+
+### 拆解我的剧本逻辑：
+
+**第一步：点击右下角的悬浮机器人（图 1）**
+在真实的网页前端代码里，这个机器人悬浮球一定有一个特定的 HTML 标签或者文本。
+虽然我没写点击机器人的代码（因为我以为网址一打开就是图 2），但如果需要点击它，我会让脚本执行类似这样的代码：
+```python
+# 假设那个悬浮球有一句话叫“嗨！我是数字员工...”或者图标有个 aria-label="数字员工"
+await page.get_by_text("数字员工").click() 
+# 或者
+await page.locator("div.floating-bot-icon").click()
+```
+
+**第二步：精准定位那个输入框（图 2）**
+当你仔细看图 2 里面那个输入框时，里面有一行淡淡的灰色提示字：**“输入您的业务指令，如"Q3季度经营情况怎么样？"”**
+在前端开发中，这行灰字被称为 `placeholder` 属性。
+
+所以，我在脚本的 **第 48 行** 施展了魔法，写了这句代码：
+```python
+input_box = page.get_by_placeholder("输入您的业务指令")
+```
+这句话的意思是：“去扫描整个网页所有的输入框，找到那个提示语里包含『输入您的业务指令』的框框，就是它了！”
+
+**第三步：发送和抓取**
+- 发送时，脚本直接模拟键盘敲击了 `Enter` 键（`await page.keyboard.press("Enter")`），这比去寻找那个纸飞机按钮的图标要稳妥得多。
+- 抓取文字时，我预设了寻找网页里 `class` 叫 `message-content` 的大段文本区块。
+
+---
+
+**所以，这就暴露了一个问题：**
+因为我之前没看到图 1，我以为打开 `http://172.30.32.19:30016/home` 就直接是图 2 的样子了。如果实际情况是**必须先点一下右下角的机器人，才能弹出输入框**，那当前的脚本可能会因为找不到输入框而卡住！
+
+你可以先试着跑一下脚本 `python run_edge_rpa.py`，看看它能不能顺利点进去填字。如果它停在那里不动了，就说明缺了“点击机器人”那一步，你只要在这个窗口告诉我，我立马教你把那一行点击代码补上！
+
+---
+
