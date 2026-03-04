@@ -4,10 +4,13 @@ import sys
 # Force output encoding
 sys.stdout.reconfigure(encoding='utf-8')
 
+# 数据源：test_data/测试数据.xlsx（商机表 + 合同表）
+DATA_PATH = 'test_data/测试数据.xlsx'
 try:
-    df = pd.read_excel('test_data/total_data.xlsx')
+    df = pd.read_excel(DATA_PATH, sheet_name='商机')
+    con_df = pd.read_excel(DATA_PATH, sheet_name='合同')
 except Exception as e:
-    print(f"Error loading: {e}")
+    print(f"Error loading {DATA_PATH}: {e}")
     exit()
 
 # Column Mapping (Based on verified Chinese names)
@@ -79,19 +82,20 @@ risks = h1_df[(h1_df[COL_AMT] > 3000) & (h1_df[COL_WIN] < 0.3)]['商机名称'].
 answers["Q46"] = f"H1预计总额: {h1_total:.2f}; 风险项目: {risks}"
 
 # Q47: Future 3 months star sales
+# 假设起点为 2025-02-12 (或根据实际数据分布调整，这里按之前逻辑保持 2025-02-12)
 start_f = pd.Timestamp('2025-02-12')
 end_f = start_f + pd.DateOffset(months=3)
 fut_df = df[(df[COL_DATE] >= start_f) & (df[COL_DATE] <= end_f)]
 if not fut_df.empty:
     top_s = fut_df.groupby(COL_OWNER)[COL_AMT].sum().nlargest(1)
-    answers["Q47"] = f"{top_s.index[0]} (预计: {top_s.values[0]:.2f})"
+    answers["Q47"] = f"{top_s.index[0]} (预计: {top_s.values[0]:.2f}，统计区间: {start_f.strftime('%Y-%m-%d')} 至 {end_f.strftime('%Y-%m-%d')})"
 else: answers["Q47"] = "无预测数据"
 
 # Q48: Potential Product Line
 line_stats = df.groupby(COL_LINE).agg({COL_AMT: 'sum', COL_WIN: 'mean'})
 line_stats['score'] = line_stats[COL_AMT] * line_stats[COL_WIN]
-top_line = line_stats.nlargest(1, 'score')
-answers["Q48"] = f"{top_line.index[0]} (储备: {top_line[COL_AMT].values[0]:.0f})"
+top_line_amt = line_stats.nlargest(1, COL_AMT)
+answers["Q48"] = f"储备最高: {top_line_amt.index[0]} (金额: {top_line_amt[COL_AMT].values[0]:.0f}, 平均赢单率: {top_line_amt[COL_WIN].values[0]:.4f})"
 
 # Q49: Bottleneck Stage
 active_df = df[df[COL_STATUS] == '活跃']
@@ -100,18 +104,30 @@ if not active_df.empty:
     answers["Q49"] = f"滞留最多: {bottleneck.index[0]} ({bottleneck.values[0]}个)"
 else: answers["Q49"] = "无活跃商机"
 
-# Q50: High Prob Return
-high_prob = df[df[COL_WIN] > 0.6]
-answers["Q50"] = f"预计回款: {high_prob[COL_AMT].sum():.2f}"
+# Q50: High Prob Return (赢单率>50% 的商机主要集中在哪些客户)
+high_prob = df[df[COL_WIN] > 0.5]
+if not high_prob.empty:
+    top_high_prob_cust = high_prob[COL_CUST].value_counts().head(5).to_dict()
+    answers["Q50"] = f"高赢单率集中客户: {top_high_prob_cust}"
+else:
+    answers["Q50"] = "无赢单率>50%的数据"
 
 # Q51: Top 10 Risk
 top10 = df.nlargest(10, COL_AMT)
 risky_top10 = top10[top10[COL_EXCLUDE].notnull()]['商机名称'].tolist()
 answers["Q51"] = f"Top10风险项目: {risky_top10}"
 
-# Q52: Low Margin (Need Contract Data - Simulated here as we loaded only Opportunity mostly, let's skip or use placeholer if logic requires join)
-# For this specific Q, we rely on the logic that we didn't find any in previous run.
-answers["Q52"] = "需关联合同表计算 (根据此前分析: 暂无大额低毛利异常)"
+# Q52: Low Margin（基于测试数据.xlsx 合同表）
+# 合同表列：净利润、毛利率、销售额汇总等，按实际列名取数
+con_amount_col = next((c for c in con_df.columns if '销售额' in str(c) or '销售' in str(c) and '额' in str(c)), None)
+con_margin_col = next((c for c in con_df.columns if '毛利率' in str(c)), None)
+if con_amount_col and con_margin_col:
+    con_df[con_amount_col] = pd.to_numeric(con_df[con_amount_col], errors='coerce')
+    con_df[con_margin_col] = pd.to_numeric(con_df[con_margin_col], errors='coerce')
+    bad = con_df[(con_df[con_amount_col] > 1000) & (con_df[con_margin_col].notna()) & (con_df[con_margin_col] < 0.1)]
+    answers["Q52"] = f"大额低毛利合同数: {len(bad)} (基于测试数据.xlsx 合同表)"
+else:
+    answers["Q52"] = "需合同表销售额/毛利率列 (测试数据.xlsx 合同表)"
 
 # Q53: Huawei Dependency
 hw_df = df[df[COL_CUST].str.contains('华为', na=False)]
@@ -128,7 +144,27 @@ answers["Q54"] = f"异常数量: {len(abnormal)}"
 load = active_df[COL_OWNER].value_counts().head(1)
 answers["Q55"] = f"负荷最重: {load.index[0]} ({load.values[0]}个)"
 
+# Q56: 推进明确建设方案阶段分析
+stage_df = df[df[COL_STAGE] == '推进明确建设方案']
+active_stage_count = len(stage_df[stage_df[COL_STATUS] == '活跃'])
+excluded_stage_df = stage_df[stage_df[COL_EXCLUDE].notna()]
+if not excluded_stage_df.empty:
+    top_reasons = excluded_stage_df[COL_EXCLUDE].value_counts().head(3).to_dict()
+    answers["Q56"] = f"活跃商机数: {active_stage_count}个; 输单主要原因: {top_reasons}"
+else:
+    answers["Q56"] = f"活跃商机数: {active_stage_count}个; 无输单数据"
+
+# Q57: 休眠商机分析
+sleep_df = df[df[COL_STATUS] == '休眠']
+sleep_count = len(sleep_df)
+if not sleep_df.empty and sleep_df[COL_EXCLUDE].notna().any():
+    top_reasons = sleep_df[COL_EXCLUDE].value_counts().head(3).to_dict()
+    answers["Q57"] = f"休眠商机数: {sleep_count}个; 输单/排除主要原因: {top_reasons}"
+else:
+    # 如果休眠状态的商机没有填排除原因，则看整体的或者提示无数据
+    answers["Q57"] = f"休眠商机数: {sleep_count}个; 无明确排除原因记录"
+
 # Output formatted
-print("--- 开放问题答案 (基于中文列名数据) ---")
+print("--- 开放问题答案 (数据源: test_data/测试数据.xlsx 商机表+合同表) ---")
 for q in sorted(answers.keys()):
     print(f"[{q}] {answers[q]}")
