@@ -2149,3 +2149,36 @@ These images can be copied for use in other locations.
 
 ---
 
+### 🧑‍💻 测试工程师 (User)
+
+[Image]
+<image_files>
+The following images were provdied by the user and saved to the workspace for future use:
+1. C:\Users\blwang16\.cursor\projects\d-jfznt-jingfenzhinengti/assets/c__Users_blwang16_AppData_Roaming_Cursor_User_workspaceStorage_3d548c5799ecee590f018d8cd81b26ce_images_image-25026122-b9e1-4cb3-9e05-fd4f5818afe7.png
+
+These images can be copied for use in other locations.
+</image_files>
+你的意思要我粘贴整个仓库的地址嘛》
+
+---
+
+### 🤖 AI 智能体 (Assistant)
+
+是的，准确地说，是**直接粘贴你在截图中看到的那个页面的浏览器地址栏里的网址**。
+
+### 具体操作：
+
+1. 看你截图的顶部浏览器地址栏，URL 应该是类似于：
+   `http://code.iflytek.com:30004/XH/xinghuo-test/jingfenzhinengti/src/branch/master/与AI协作全过程.md`
+2. 你把这一长串网址复制下来。
+3. 在你的飞书文档（或者飞书聊天群）里，写一句话：
+   > 👉 **点击查看：测试方案演进与AI协作实时全纪实**
+4. 把刚刚复制的那串网址给这句话加上超链接。
+
+### 为什么要这么做？
+因为在公司内部的 Git 平台上（看域名你用的是你们公司内部的科大讯飞 GitLab/Gitea 平台），Markdown 文件本身就是被原生支持渲染的！
+- 当你的领导或同事点开这个链接时，他们不需要下载文件，直接在网页上就能看到排版好的、图文并茂的对话记录。
+- **最关键的是**：以后只要你用 Cursor 跟我聊出了新东西，我后台一推（就像我刚才又把这句对话推进去了一样），大家点开那个旧链接，看到的永远都是自动同步出来的**最新鲜的版本**，再也不用来回导入飞书了！
+
+---
+
