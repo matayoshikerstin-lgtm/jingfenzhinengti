@@ -2,5 +2,14 @@
     "python.defaultInterpreterPath": "${workspaceFolder}\\venv\\Scripts\\python.exe",
     "python.analysis.extraPaths": [
         "${workspaceFolder}\\venv\\Lib\\site-packages"
-    ]
+    ],
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/*.pyc": true,
+        "venv": true
+    },
+    "search.exclude": {
+        "venv": true
+    }
 }

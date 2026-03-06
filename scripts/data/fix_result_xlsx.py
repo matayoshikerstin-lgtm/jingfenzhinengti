@@ -2,9 +2,15 @@
 # 依赖: pip install pandas openpyxl
 
 import os
+from pathlib import Path
 
 def main():
-    path = os.path.join(os.path.dirname(__file__), 'test_result', 'result.xlsx')
+    current = Path(__file__).resolve()
+    project_root = next(
+        parent for parent in [current.parent, *current.parents]
+        if (parent / 'test_result').exists()
+    )
+    path = os.path.join(project_root, 'test_result', 'result.xlsx')
     if not os.path.exists(path):
         print(f'文件不存在: {path}')
         return
