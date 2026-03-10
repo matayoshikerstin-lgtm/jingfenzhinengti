@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"C:\\\\Users\\\\blwang16\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\" \"d:/jfznt/仓库/jingfenzhinengti/scripts/click_weixin.py\")",
+      "Bash(\"C:\\\\Users\\\\blwang16\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\" \"d:/jfznt/仓库/jingfenzhinengti/scripts/find_weixin.py\")"
+    ]
+  }
+}
